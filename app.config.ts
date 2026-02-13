@@ -16,6 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     backgroundColor: '#6C5CE7',
   },
   ios: {
+    bundleIdentifier: 'com.alperyardimci.talkify',
     supportsTablet: true,
     infoPlist: {
       NSAppTransportSecurity: {
