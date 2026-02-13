@@ -1,57 +1,98 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Tabs } from 'expo-router';
+import { useTheme } from '@/src/hooks/useTheme';
+import { Strings } from '@/src/constants/strings';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+// Each tab has its own accent color
+const TAB_COLORS = {
+  home: '#6C5CE7',      // purple
+  analysis: '#FD79A8',  // pink
+  statistics: '#00CEC9', // teal
+  settings: '#FDCB6E',  // yellow/amber
+} as const;
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
+function TabBarIcon({
+  name,
+  color,
+  activeColor,
+  focused,
+}: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
+  activeColor: string;
+  focused: boolean;
 }) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return (
+    <FontAwesome
+      size={22}
+      name={name}
+      color={focused ? activeColor : color}
+      style={{ marginBottom: -2 }}
+    />
+  );
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colors } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.tabBarInactive,
+        tabBarStyle: {
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.border,
+        },
+        headerStyle: {
+          backgroundColor: colors.surface,
+        },
+        headerTintColor: colors.text,
+        headerShadowVisible: false,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
+          title: Strings.tabs.home,
+          headerShown: false,
+          tabBarActiveTintColor: TAB_COLORS.home,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="home" color={color} activeColor={TAB_COLORS.home} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="analysis"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: Strings.tabs.analysis,
+          headerShown: false,
+          tabBarActiveTintColor: TAB_COLORS.analysis,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="magic" color={color} activeColor={TAB_COLORS.analysis} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="statistics"
+        options={{
+          title: Strings.tabs.statistics,
+          headerShown: false,
+          tabBarActiveTintColor: TAB_COLORS.statistics,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="bar-chart" color={color} activeColor={TAB_COLORS.statistics} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: Strings.tabs.settings,
+          headerShown: false,
+          tabBarActiveTintColor: TAB_COLORS.settings,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="shield" color={color} activeColor={TAB_COLORS.settings} focused={focused} />
+          ),
         }}
       />
     </Tabs>
