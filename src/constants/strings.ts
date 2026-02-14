@@ -175,6 +175,31 @@ const trStrings = {
     medya_delisi: '📸',
   },
 
+  guide: {
+    title: 'Nasıl dışa aktarılır?',
+    tabIos: 'iPhone',
+    tabAndroid: 'Android',
+    iosSteps: [
+      'WhatsApp\'ı aç',
+      'Dışa aktarmak istediğin sohbeti aç',
+      'Üstteki kişi/grup adına dokun',
+      'Aşağı kaydır, "Sohbeti Dışa Aktar" seçeneğine dokun',
+      '"Medyasız" seçeneğini seç',
+      '"Dosyalara Kaydet" ile telefonuna kaydet',
+      'Talkify\'e dön ve "Dosya Seç"e bas',
+    ] as string[],
+    androidSteps: [
+      'WhatsApp\'ı aç',
+      'Dışa aktarmak istediğin sohbeti aç',
+      'Sağ üstteki ⋮ menüsüne dokun',
+      '"Daha fazla" seçeneğine dokun',
+      '"Sohbeti dışa aktar"a dokun',
+      '"Medyasız" seçeneğini seç',
+      'Talkify\'e dön ve "Dosya Seç"e bas',
+    ] as string[],
+    privacyNote: 'Verileriniz yalnızca cihazınızda işlenir, hiçbir sunucuya gönderilmez.',
+  },
+
   days: ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'] as string[],
   daysShort: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'] as string[],
 
@@ -362,6 +387,31 @@ const enStrings: typeof trStrings = {
     sessiz_okuyucu: '🤫',
     sabahci: '🌅',
     medya_delisi: '📸',
+  },
+
+  guide: {
+    title: 'How to export?',
+    tabIos: 'iPhone',
+    tabAndroid: 'Android',
+    iosSteps: [
+      'Open WhatsApp',
+      'Open the chat you want to export',
+      'Tap the contact/group name at the top',
+      'Scroll down and tap "Export Chat"',
+      'Select "Without Media"',
+      'Save to your phone using "Save to Files"',
+      'Return to Talkify and tap "Select File"',
+    ] as string[],
+    androidSteps: [
+      'Open WhatsApp',
+      'Open the chat you want to export',
+      'Tap the ⋮ menu at the top right',
+      'Tap "More"',
+      'Tap "Export chat"',
+      'Select "Without Media"',
+      'Return to Talkify and tap "Select File"',
+    ] as string[],
+    privacyNote: 'Your data is processed only on your device and never sent to any server.',
   },
 
   days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as string[],

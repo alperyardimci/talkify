@@ -7,7 +7,7 @@ import { useWhatsAppParser } from '@/src/hooks/useWhatsAppParser';
 import { useChatStore } from '@/src/stores';
 import { Spacing, FontSize, FontWeight } from '@/src/constants/theme';
 import { Title, Body } from '@/src/components/ui';
-import { FileUploader, ParseProgress as ParseProgressComponent, ChatPreview, GroupTitleHistory } from '@/src/components/chat';
+import { FileUploader, ParseProgress as ParseProgressComponent, ChatPreview, GroupTitleHistory, ExportGuide } from '@/src/components/chat';
 
 const logo = require('@/assets/logo/logo.png');
 
@@ -39,6 +39,12 @@ export default function HomeScreen() {
           fileName={fileName ?? undefined}
           isLoading={isLoading}
         />
+
+        {!currentChat && !isLoading && (
+          <View style={styles.section}>
+            <ExportGuide />
+          </View>
+        )}
 
         {parseProgress && parseProgress.stage !== 'done' && (
           <View style={styles.section}>
