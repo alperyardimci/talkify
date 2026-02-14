@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talkify — Gizlilik Politikası</title>
+  <style>
+    :root {
+      --primary: #6C5CE7;
+      --bg: #F8F9FA;
+      --surface: #FFFFFF;
+      --text: #2D3436;
+      --text-secondary: #636E72;
+      --border: #DFE6E9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #A29BFE;
+        --bg: #1A1A2E;
+        --surface: #16213E;
+        --text: #EAEAEA;
+        --text-secondary: #A0A0A0;
+        --border: #2D3436;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 24px 16px 64px;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    .header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+    .card p, .card li {
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .card ul {
+      padding-left: 20px;
+      margin-bottom: 8px;
+    }
+    .card li {
+      margin-bottom: 6px;
+    }
+    .highlight {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .highlight h2, .highlight p {
+      color: #fff;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      margin-bottom: 12px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Talkify</h1>
+      <p>Gizlilik Politikasi / Privacy Policy</p>
+    </div>
+
+    <div class="card highlight">
+      <h2>Verileriniz Sizde Kalir</h2>
+      <p>Talkify, sohbet verilerinizi yalnizca cihazinizda isler. Hicbir mesaj icerigini sunucularimiza gondermez, saklamaz veya ucuncu taraflarla paylasmaz.</p>
+    </div>
+
+    <div class="card">
+      <h2>1. Toplanan Veriler</h2>
+      <p>Talkify asagidaki verileri <strong>yalnizca cihazinizda</strong> isler:</p>
+      <ul>
+        <li>WhatsApp sohbet dosyalari (.txt veya .zip) — yalnizca siz yukledikten sonra, cihaz uzerinde ayristirma amacli</li>
+        <li>Katilimci isimleri, mesaj sayilari, zaman damgalari ve emoji kullanimi gibi istatistiksel veriler</li>
+      </ul>
+      <p>Bu veriler cihazinizdan cikmaz ve hicbir sunucuya gonderilmez.</p>
+    </div>
+
+    <div class="card">
+      <h2>2. Yapay Zeka Analizi</h2>
+      <p>Talkify, sohbet analizi icin Groq API hizmetini kullanir. Bu surecte:</p>
+      <ul>
+        <li>API'ye yalnizca <strong>istatistiksel ozet veriler</strong> gonderilir (mesaj sayilari, aktivite oruntuleri, davranis kaliplari)</li>
+        <li>Mesaj icerikleri, kisisel bilgiler veya sohbet metinleri API'ye <strong>gonderilmez</strong></li>
+        <li>API yaniti alindiktan sonra istek verileri saklanmaz</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>3. Veri Depolama</h2>
+      <ul>
+        <li>Ayristirilan sohbet verileri cihazinizin yerel deposunda (AsyncStorage) saklanir</li>
+        <li>Uygulamayi sildiginizde tum veriler kalici olarak silinir</li>
+        <li>Hicbir veri bulut hizmetine yedeklenmez</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>4. Ucuncu Taraf Hizmetleri</h2>
+      <ul>
+        <li><strong>Groq API:</strong> Yapay zeka analizi icin kullanilir. Yalnizca istatistiksel ozet gonderilir. <a href="https://groq.com/privacy-policy/" style="color:var(--primary)">Groq Gizlilik Politikasi</a></li>
+      </ul>
+      <p>Bunun disinda hicbir ucuncu taraf analitik, reklam veya izleme hizmeti kullanilmaz.</p>
+    </div>
+
+    <div class="card">
+      <h2>5. Cocuklarin Gizliligi</h2>
+      <p>Talkify 13 yasin altindaki cocuklardan bilerek veri toplamaz. Uygulama cocuklara yonelik degildir.</p>
+    </div>
+
+    <div class="card">
+      <h2>6. Degisiklikler</h2>
+      <p>Bu gizlilik politikasi guncellenebilir. Onemli degisiklikler uygulama icinden bildirilir.</p>
+    </div>
+
+    <div class="card">
+      <h2>7. Iletisim</h2>
+      <p>Gizlilik ile ilgili sorulariniz icin:</p>
+      <p><strong>E-posta:</strong> yardimciemin@gmail.com</p>
+    </div>
+
+    <div class="footer">
+      <p>Son guncelleme: 14 Subat 2026</p>
+      <p><a href="https://github.com/alperyardimci/talkify">github.com/alperyardimci/talkify</a></p>
+    </div>
+  </div>
+</body>
+</html>
