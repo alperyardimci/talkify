@@ -3,17 +3,20 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { useStatistics } from '@/src/hooks/useStatistics';
-import { useChatStore } from '@/src/stores';
-import { Strings } from '@/src/constants/strings';
+import { useChatStore, useSettingsStore } from '@/src/stores';
 import { Spacing } from '@/src/constants/theme';
 import { Title, Subtitle, Body } from '@/src/components/ui';
-import { StatsSummary, HourlyChart, EmojiCloud, ParticipantList } from '@/src/components/statistics';
+import { StatsSummary, HourlyChart, EmojiCloud, ParticipantList, DuoResponseTime } from '@/src/components/statistics';
+import { calculateDuoResponseTimes } from '@/src/services/analytics/statisticsEngine';
 
 export default function StatisticsScreen() {
   const { colors } = useTheme();
+  const s = useStrings();
   const router = useRouter();
-  const currentChat = useChatStore((s) => s.currentChat);
+  const currentChat = useChatStore((st) => st.currentChat);
+  const timezoneOffset = useSettingsStore((st) => st.timezoneOffset);
   const { statistics, recalculate } = useStatistics();
 
   useEffect(() => {
@@ -22,12 +25,14 @@ export default function StatisticsScreen() {
     }
   }, [currentChat, statistics, recalculate]);
 
+  const duoStats = currentChat ? calculateDuoResponseTimes(currentChat, timezoneOffset) : null;
+
   if (!currentChat || !statistics) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <View style={styles.emptyState}>
-          <Title>{Strings.statistics.title}</Title>
-          <Body style={styles.emptyText}>{Strings.statistics.noData}</Body>
+          <Title>{s.statistics.title}</Title>
+          <Body style={styles.emptyText}>{s.statistics.noData}</Body>
         </View>
       </SafeAreaView>
     );
@@ -37,20 +42,27 @@ export default function StatisticsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Title>{Strings.statistics.title}</Title>
+          <Title>{s.statistics.title}</Title>
         </View>
 
         <StatsSummary statistics={statistics} />
 
+        {duoStats && (
+          <View style={styles.section}>
+            <Subtitle>{s.statistics.duoResponseTime}</Subtitle>
+            <DuoResponseTime stats={duoStats} />
+          </View>
+        )}
+
         {statistics.topEmojis.length > 0 && (
           <View style={styles.section}>
-            <Subtitle>{Strings.statistics.topEmojis}</Subtitle>
+            <Subtitle>{s.statistics.topEmojis}</Subtitle>
             <EmojiCloud emojis={statistics.topEmojis} />
           </View>
         )}
 
         <View style={styles.section}>
-          <Subtitle>{Strings.statistics.participants}</Subtitle>
+          <Subtitle>{s.statistics.participants}</Subtitle>
           <ParticipantList
             stats={statistics.participantStats}
             onPress={(participantId) =>
@@ -60,7 +72,7 @@ export default function StatisticsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Subtitle>{Strings.statistics.hourlyActivity}</Subtitle>
+          <Subtitle>{s.statistics.hourlyActivity}</Subtitle>
           <HourlyChart data={statistics.hourlyHeatmap} />
         </View>
       </ScrollView>

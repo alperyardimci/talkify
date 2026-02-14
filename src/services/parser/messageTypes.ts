@@ -36,6 +36,13 @@ const SYSTEM_PATTERNS_TR: string[] = [
   'yönetici olarak',
   'grubun ayarlarını',
   'bu grubu oluşturdu',
+  'grubun adını',
+  'grubun adı',
+  'grup adını',
+  'grup simgesini',
+  'gruba eklendi',
+  'gruptan ayrıldı',
+  'konu değiştirildi',
 ];
 
 const SYSTEM_PATTERNS_EN: string[] = [

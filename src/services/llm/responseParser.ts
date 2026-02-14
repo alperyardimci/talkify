@@ -2,6 +2,9 @@
 // Talkify - LLM Response Parser
 // ============================================
 
+import type { Language } from '@/src/types';
+import { getLabels } from './promptTemplates';
+
 interface ParticipantResponseParsed {
   nickname: string;
   personality: string;
@@ -15,25 +18,36 @@ interface GroupResponseParsed {
   funFacts: string[];
 }
 
-const PARTICIPANT_DEFAULTS: ParticipantResponseParsed = {
+const PARTICIPANT_DEFAULTS_TR: ParticipantResponseParsed = {
   nickname: 'Gizemli Kişi',
   personality: 'Analiz yapılamadı',
   gossip: 'Dedikodu yok',
   warning: 'Dikkat!',
 };
 
-const GROUP_DEFAULTS: GroupResponseParsed = {
+const PARTICIPANT_DEFAULTS_EN: ParticipantResponseParsed = {
+  nickname: 'Mystery Person',
+  personality: 'Analysis unavailable',
+  gossip: 'No gossip',
+  warning: 'Watch out!',
+};
+
+const GROUP_DEFAULTS_TR: GroupResponseParsed = {
   summary: 'Grup analizi yapılamadı',
   dynamics: 'Dinamik bilgisi yok',
   funFacts: [],
 };
 
+const GROUP_DEFAULTS_EN: GroupResponseParsed = {
+  summary: 'Group analysis unavailable',
+  dynamics: 'No dynamics info',
+  funFacts: [],
+};
+
 /**
- * Belirtilen etiketle başlayan satırın içeriğini çıkarır.
- * Etiketten sonraki tüm metni, bir sonraki bilinen etikete kadar alır.
+ * Extracts content for a given label from response text.
  */
 function extractField(text: string, label: string, nextLabels: string[]): string | null {
-  // Etiketin regex patternı: satır başında veya boşluktan sonra, büyük/küçük harf duyarsız
   const labelPattern = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`${labelPattern}\\s*:?\\s*(.*)`, 'i');
   const match = text.match(regex);
@@ -44,12 +58,9 @@ function extractField(text: string, label: string, nextLabels: string[]): string
 
   let value = match[1].trim();
 
-  // Eğer sonraki etiketlerden birisi aynı satırda değilse,
-  // çok satırlı içerik olabilir - sonraki etikete kadar al
   const matchIndex = text.indexOf(match[0]);
   const afterMatch = text.substring(matchIndex + match[0].length);
 
-  // Sonraki bilinen bir etiket bulana kadar satırları ekle
   const lines = afterMatch.split('\n');
   const additionalLines: string[] = [];
 
@@ -59,7 +70,6 @@ function extractField(text: string, label: string, nextLabels: string[]): string
       continue;
     }
 
-    // Sonraki etiketlerden birine rastlandıysa dur
     const isNextLabel = nextLabels.some((nl) => {
       const nlPattern = new RegExp(`^${nl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:`, 'i');
       return nlPattern.test(trimmedLine);
@@ -80,61 +90,145 @@ function extractField(text: string, label: string, nextLabels: string[]): string
 }
 
 /**
- * LLM'den gelen katılımcı analiz yanıtını ayrıştırır.
- *
- * Beklenen format:
- *   LAKAP: [yaratıcı lakap]
- *   KİŞİLİK: [2-3 cümle kişilik analizi]
- *   DEDİKODU: [2-3 cümle eğlenceli dedikodu]
- *   UYARI: [1 cümle komik uyarı]
+ * Parses participant analysis response from LLM.
+ * Supports both TR labels (LAKAP, KİŞİLİK, DEDİKODU, UYARI)
+ * and EN labels (NICKNAME, PERSONALITY, GOSSIP, WARNING).
  */
-export function parseParticipantResponse(response: string): ParticipantResponseParsed {
+export function parseParticipantResponse(response: string, language: Language = 'tr'): ParticipantResponseParsed {
+  const defaults = language === 'tr' ? PARTICIPANT_DEFAULTS_TR : PARTICIPANT_DEFAULTS_EN;
+
   if (!response || response.trim().length === 0) {
-    return { ...PARTICIPANT_DEFAULTS };
+    return { ...defaults };
   }
 
-  const labels = ['LAKAP', 'KİŞİLİK', 'DEDİKODU', 'UYARI'];
+  const l = getLabels(language);
 
-  const nickname = extractField(response, 'LAKAP', ['KİŞİLİK', 'DEDİKODU', 'UYARI']);
-  const personality = extractField(response, 'KİŞİLİK', ['DEDİKODU', 'UYARI', 'LAKAP']);
-  const gossip = extractField(response, 'DEDİKODU', ['UYARI', 'LAKAP', 'KİŞİLİK']);
-  const warning = extractField(response, 'UYARI', ['LAKAP', 'KİŞİLİK', 'DEDİKODU']);
+  const nickname = extractField(response, l.nickname, [l.personality, l.gossip, l.warning]);
+  const personality = extractField(response, l.personality, [l.gossip, l.warning, l.nickname]);
+  const gossip = extractField(response, l.gossip, [l.warning, l.nickname, l.personality]);
+  const warning = extractField(response, l.warning, [l.nickname, l.personality, l.gossip]);
 
   return {
-    nickname: nickname || PARTICIPANT_DEFAULTS.nickname,
-    personality: personality || PARTICIPANT_DEFAULTS.personality,
-    gossip: gossip || PARTICIPANT_DEFAULTS.gossip,
-    warning: warning || PARTICIPANT_DEFAULTS.warning,
+    nickname: nickname || defaults.nickname,
+    personality: personality || defaults.personality,
+    gossip: gossip || defaults.gossip,
+    warning: warning || defaults.warning,
+  };
+}
+
+interface CombinedResponseParsed {
+  participants: { name: string; data: ParticipantResponseParsed }[];
+  group: GroupResponseParsed;
+}
+
+/**
+ * Parses a combined response with all participants + group in one block.
+ * Expects ---KİŞİ: Name / ---PERSON: Name headers and ---GRUP / ---GROUP header.
+ */
+export function parseCombinedResponse(response: string, participantNames: string[], language: Language = 'tr'): CombinedResponseParsed {
+  const pDefaults = language === 'tr' ? PARTICIPANT_DEFAULTS_TR : PARTICIPANT_DEFAULTS_EN;
+  const gDefaults = language === 'tr' ? GROUP_DEFAULTS_TR : GROUP_DEFAULTS_EN;
+  const l = getLabels(language);
+
+  const personHeader = language === 'tr' ? 'KİŞİ' : 'PERSON';
+  const groupHeader = language === 'tr' ? 'GRUP' : 'GROUP';
+
+  // Split by ---KİŞİ: or ---PERSON: or ---GRUP or ---GROUP
+  const sections = response.split(/---\s*/);
+
+  const participants: { name: string; data: ParticipantResponseParsed }[] = [];
+  let groupSection = '';
+
+  for (const section of sections) {
+    const trimmed = section.trim();
+    if (!trimmed) continue;
+
+    // Check if this is a person section
+    const personMatch = trimmed.match(new RegExp(`^${personHeader}\\s*:\\s*(.+)`, 'i'));
+    if (personMatch) {
+      const name = personMatch[1].trim();
+      const body = trimmed.substring(personMatch[0].length);
+      const nickname = extractField(body, l.nickname, [l.personality, l.gossip, l.warning]);
+      const personality = extractField(body, l.personality, [l.gossip, l.warning]);
+      const gossip = extractField(body, l.gossip, [l.warning]);
+      const warning = extractField(body, l.warning, [l.nickname]);
+
+      participants.push({
+        name,
+        data: {
+          nickname: nickname || pDefaults.nickname,
+          personality: personality || pDefaults.personality,
+          gossip: gossip || pDefaults.gossip,
+          warning: warning || pDefaults.warning,
+        },
+      });
+      continue;
+    }
+
+    // Check if this is the group section
+    const groupMatch = trimmed.match(new RegExp(`^${groupHeader}`, 'i'));
+    if (groupMatch) {
+      groupSection = trimmed.substring(groupMatch[0].length);
+    }
+  }
+
+  // Match parsed names to original participant names (fuzzy)
+  const matchedParticipants = participantNames.map((originalName) => {
+    const found = participants.find(
+      (p) => p.name === originalName || originalName.includes(p.name) || p.name.includes(originalName)
+    );
+    return {
+      name: originalName,
+      data: found?.data || { ...pDefaults },
+    };
+  });
+
+  // Parse group
+  const summary = extractField(groupSection, l.summary, [l.dynamics, l.funFacts]);
+  const dynamics = extractField(groupSection, l.dynamics, [l.summary, l.funFacts]);
+  const funFactsRaw = extractField(groupSection, l.funFacts, [l.summary, l.dynamics]);
+  const funFacts = funFactsRaw
+    ? funFactsRaw.split('|').map((f) => f.trim()).filter((f) => f.length > 0)
+    : gDefaults.funFacts;
+
+  return {
+    participants: matchedParticipants,
+    group: {
+      summary: summary || gDefaults.summary,
+      dynamics: dynamics || gDefaults.dynamics,
+      funFacts,
+    },
   };
 }
 
 /**
- * LLM'den gelen grup analiz yanıtını ayrıştırır.
- *
- * Beklenen format:
- *   ÖZET: [grup dinamikleri özeti]
- *   DİNAMİK: [ilişki dinamikleri]
- *   EĞLENCE: [eğlenceli bilgi 1] | [eğlenceli bilgi 2] | [eğlenceli bilgi 3]
+ * Parses group analysis response from LLM.
+ * Supports both TR labels (ÖZET, DİNAMİK, EĞLENCE)
+ * and EN labels (SUMMARY, DYNAMICS, FUN_FACTS).
  */
-export function parseGroupResponse(response: string): GroupResponseParsed {
+export function parseGroupResponse(response: string, language: Language = 'tr'): GroupResponseParsed {
+  const defaults = language === 'tr' ? GROUP_DEFAULTS_TR : GROUP_DEFAULTS_EN;
+
   if (!response || response.trim().length === 0) {
-    return { ...GROUP_DEFAULTS };
+    return { ...defaults };
   }
 
-  const summary = extractField(response, 'ÖZET', ['DİNAMİK', 'EĞLENCE']);
-  const dynamics = extractField(response, 'DİNAMİK', ['ÖZET', 'EĞLENCE']);
-  const funFactsRaw = extractField(response, 'EĞLENCE', ['ÖZET', 'DİNAMİK']);
+  const l = getLabels(language);
+
+  const summary = extractField(response, l.summary, [l.dynamics, l.funFacts]);
+  const dynamics = extractField(response, l.dynamics, [l.summary, l.funFacts]);
+  const funFactsRaw = extractField(response, l.funFacts, [l.summary, l.dynamics]);
 
   const funFacts = funFactsRaw
     ? funFactsRaw
         .split('|')
         .map((f) => f.trim())
         .filter((f) => f.length > 0)
-    : GROUP_DEFAULTS.funFacts;
+    : defaults.funFacts;
 
   return {
-    summary: summary || GROUP_DEFAULTS.summary,
-    dynamics: dynamics || GROUP_DEFAULTS.dynamics,
+    summary: summary || defaults.summary,
+    dynamics: dynamics || defaults.dynamics,
     funFacts,
   };
 }

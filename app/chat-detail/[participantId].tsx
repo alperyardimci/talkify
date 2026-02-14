@@ -1,20 +1,21 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { useStatistics } from '@/src/hooks/useStatistics';
 import { useAnalysisStore } from '@/src/stores';
-import { Strings } from '@/src/constants/strings';
-import { Spacing } from '@/src/constants/theme';
-import { Title, Subtitle, Body, Caption, Card, Badge, StatCard } from '@/src/components/ui';
-import { NicknameReveal, GossipBubble } from '@/src/components/analysis';
-import { HourlyChart, EmojiCloud } from '@/src/components/statistics';
+import { Spacing, FontSize, FontWeight, BorderRadius } from '@/src/constants/theme';
+import { Subtitle, Body, Caption, Card, Badge } from '@/src/components/ui';
+import { GossipBubble } from '@/src/components/analysis';
+import { HourlyChart, EmojiCloud, TopWords } from '@/src/components/statistics';
 
 export default function ParticipantDetailScreen() {
   const { colors } = useTheme();
+  const s = useStrings();
   const { participantId } = useLocalSearchParams<{ participantId: string }>();
   const { statistics, getPatterns } = useStatistics();
-  const analysisResult = useAnalysisStore((s) => s.analysisResult);
+  const analysisResult = useAnalysisStore((st) => st.analysisResult);
 
   const participantStats = statistics?.participantStats.find(
     (p) => p.participantId === participantId
@@ -28,7 +29,7 @@ export default function ParticipantDetailScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.emptyState}>
-          <Body>Katılımcı bulunamadı</Body>
+          <Body>{s.statistics.noData}</Body>
         </View>
       </View>
     );
@@ -41,61 +42,87 @@ export default function ParticipantDetailScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
     >
-      {/* Nickname Reveal */}
-      {participantAnalysis && (
-        <NicknameReveal
-          nickname={participantAnalysis.nickname}
-          name={participantAnalysis.name}
-        />
-      )}
+      {/* Header: Name + Nickname */}
+      <View style={styles.header}>
+        <Text style={[styles.headerName, { color: colors.text }]}>
+          {participantStats.name}
+        </Text>
+        {participantAnalysis && (
+          <Text style={[styles.headerNickname, { color: colors.primary }]}>
+            {participantAnalysis.nickname}
+          </Text>
+        )}
+      </View>
 
-      {/* Basic Stats */}
-      <View style={styles.section}>
-        <Subtitle>{participantStats.name}</Subtitle>
-        <View style={styles.statsGrid}>
-          <StatCard
-            label={Strings.statistics.totalMessages}
-            value={participantStats.messageCount.toLocaleString('tr-TR')}
-            icon="💬"
-            color={colors.primary}
-          />
-          <StatCard
-            label={Strings.statistics.totalWords}
-            value={participantStats.wordCount.toLocaleString('tr-TR')}
-            icon="📝"
-            color={colors.secondary}
-          />
-          <StatCard
-            label={Strings.statistics.totalEmojis}
-            value={participantStats.emojiCount.toLocaleString('tr-TR')}
-            icon="😀"
-            color={colors.accent}
-          />
+      {/* Compact Stats Row */}
+      <Card>
+        <View style={styles.compactStatsRow}>
+          <View style={styles.compactStat}>
+            <Text style={[styles.compactStatValue, { color: colors.text }]}>
+              {participantStats.messageCount.toLocaleString('tr-TR')}
+            </Text>
+            <Text style={[styles.compactStatLabel, { color: colors.textSecondary }]}>
+              {s.statistics.totalMessages}
+            </Text>
+          </View>
+          <View style={[styles.compactStatDivider, { backgroundColor: colors.border }]} />
+          <View style={styles.compactStat}>
+            <Text style={[styles.compactStatValue, { color: colors.text }]}>
+              {participantStats.wordCount.toLocaleString('tr-TR')}
+            </Text>
+            <Text style={[styles.compactStatLabel, { color: colors.textSecondary }]}>
+              {s.statistics.totalWords}
+            </Text>
+          </View>
+          <View style={[styles.compactStatDivider, { backgroundColor: colors.border }]} />
+          <View style={styles.compactStat}>
+            <Text style={[styles.compactStatValue, { color: colors.text }]}>
+              {participantStats.emojiCount.toLocaleString('tr-TR')}
+            </Text>
+            <Text style={[styles.compactStatLabel, { color: colors.textSecondary }]}>
+              {s.statistics.totalEmojis}
+            </Text>
+          </View>
           {participantStats.avgResponseTimeMinutes != null && (
-            <StatCard
-              label={Strings.statistics.avgResponseTime}
-              value={`${Math.round(participantStats.avgResponseTimeMinutes)} ${Strings.statistics.minutes}`}
-              icon="⏱️"
-              color={colors.warning}
-            />
+            <>
+              <View style={[styles.compactStatDivider, { backgroundColor: colors.border }]} />
+              <View style={styles.compactStat}>
+                <Text style={[styles.compactStatValue, { color: colors.text }]}>
+                  {participantStats.avgResponseTimeMinutes >= 60
+                    ? `${Math.round(participantStats.avgResponseTimeMinutes / 60)}`
+                    : participantStats.avgResponseTimeMinutes < 1
+                      ? '< 1'
+                      : `${Math.round(participantStats.avgResponseTimeMinutes)}`}
+                </Text>
+                <Text style={[styles.compactStatLabel, { color: colors.textSecondary }]}>
+                  {participantStats.avgResponseTimeMinutes >= 60
+                    ? s.statistics.hours
+                    : s.statistics.minutes}
+                </Text>
+              </View>
+            </>
           )}
         </View>
-      </View>
+      </Card>
 
       {/* Behavior Patterns */}
       {patterns.length > 0 && (
         <View style={styles.section}>
-          <Subtitle>🏷️ {Strings.statistics.behaviorPatterns}</Subtitle>
+          <Subtitle>{s.statistics.behaviorPatterns}</Subtitle>
           <Card>
             <View style={styles.patternList}>
               {patterns.map((pattern) => (
                 <View key={pattern.type} style={styles.patternItem}>
-                  <Badge
-                    text={pattern.label}
-                    icon={pattern.icon}
-                    color={colors.primary}
-                  />
-                  <Caption>{pattern.description}</Caption>
+                  <View style={styles.patternHeader}>
+                    <Badge
+                      text={pattern.label}
+                      icon={pattern.icon}
+                      color={colors.primary}
+                    />
+                    <Text style={[styles.patternScore, { color: colors.textSecondary }]}>
+                      {pattern.score}%
+                    </Text>
+                  </View>
                   <View style={styles.scoreBar}>
                     <View
                       style={[
@@ -118,7 +145,7 @@ export default function ParticipantDetailScreen() {
       {participantAnalysis && (
         <>
           <View style={styles.section}>
-            <Subtitle>🧠 {Strings.analysis.personality}</Subtitle>
+            <Subtitle>{s.analysis.personality}</Subtitle>
             <Card>
               <Body>{participantAnalysis.personality}</Body>
             </Card>
@@ -132,7 +159,7 @@ export default function ParticipantDetailScreen() {
           </View>
 
           <View style={styles.section}>
-            <Subtitle>⚠️ {Strings.analysis.warning}</Subtitle>
+            <Subtitle>{s.analysis.warning}</Subtitle>
             <Card style={{ backgroundColor: colors.warning + '20' }}>
               <Body>{participantAnalysis.warning}</Body>
             </Card>
@@ -140,38 +167,29 @@ export default function ParticipantDetailScreen() {
         </>
       )}
 
+      {/* Top Words */}
+      {participantStats.topWords.length > 0 && (
+        <View style={styles.section}>
+          <Subtitle>{s.statistics.topWords}</Subtitle>
+          <Card>
+            <TopWords words={participantStats.topWords} />
+          </Card>
+        </View>
+      )}
+
       {/* Hourly Activity */}
       <View style={styles.section}>
-        <Subtitle>⏰ {Strings.statistics.hourlyActivity}</Subtitle>
+        <Subtitle>{s.statistics.hourlyActivity}</Subtitle>
         <HourlyChart data={participantStats.hourlyActivity} />
       </View>
 
       {/* Emojis */}
       {participantStats.uniqueEmojis.length > 0 && (
         <View style={styles.section}>
-          <Subtitle>😀 {Strings.statistics.topEmojis}</Subtitle>
+          <Subtitle>{s.statistics.topEmojis}</Subtitle>
           <EmojiCloud emojis={participantStats.uniqueEmojis} />
         </View>
       )}
-
-      {/* Fun Messages */}
-      <View style={styles.section}>
-        <Subtitle>📖 Öne Çıkan Mesajlar</Subtitle>
-        <Card>
-          <View style={styles.messageSection}>
-            <Caption>En uzun mesaj:</Caption>
-            <Body numberOfLines={4}>
-              "{participantStats.longestMessage}"
-            </Body>
-          </View>
-          {participantStats.shortestMessage && (
-            <View style={styles.messageSection}>
-              <Caption>En kısa mesaj:</Caption>
-              <Body>"{participantStats.shortestMessage}"</Body>
-            </View>
-          )}
-        </Card>
-      </View>
     </ScrollView>
   );
 }
@@ -189,20 +207,55 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  section: {
-    marginTop: Spacing.lg,
-    gap: Spacing.sm,
+  header: {
+    marginBottom: Spacing.sm,
+    gap: 2,
   },
-  statsGrid: {
+  headerName: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.bold,
+  },
+  headerNickname: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+  },
+  compactStatsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
+    alignItems: 'center',
+  },
+  compactStat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  compactStatValue: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold,
+  },
+  compactStatLabel: {
+    fontSize: FontSize.xs,
+  },
+  compactStatDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 28,
+  },
+  section: {
+    marginTop: Spacing.md,
+    gap: Spacing.xs,
   },
   patternList: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   patternItem: {
-    gap: Spacing.xs,
+    gap: 4,
+  },
+  patternHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  patternScore: {
+    fontSize: FontSize.xs,
   },
   scoreBar: {
     height: 4,
@@ -213,9 +266,5 @@ const styles = StyleSheet.create({
   scoreFill: {
     height: '100%',
     borderRadius: 2,
-  },
-  messageSection: {
-    marginBottom: Spacing.md,
-    gap: Spacing.xs,
   },
 });

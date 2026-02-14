@@ -6,6 +6,7 @@ import type {
   ParsedChat,
   ParsedMessage,
   ChatParticipant,
+  GroupTitleChange,
   ParseProgress,
   DateFormatType,
 } from '@/src/types';
@@ -60,6 +61,13 @@ function extractSenderAndContent(rest: string): {
   // Validate sender: it should not be excessively long (probably not a real sender)
   // and should not contain newlines. WhatsApp sender names are typically short.
   if (sender.length > 100 || sender.includes('\n')) {
+    return { sender: '', content: rest };
+  }
+
+  // Check if the sender portion looks like a system message (e.g. group title changes)
+  // by classifying it — if the sender text itself is a system message, treat the
+  // entire line as a system message with no sender.
+  if (classifyMessage(sender) === 'system' || classifyMessage(rest) === 'system') {
     return { sender: '', content: rest };
   }
 
@@ -175,6 +183,55 @@ function deriveChatName(participants: ChatParticipant[]): string {
     .map((p) => p.name)
     .join(', ');
   return `${topNames} +${participants.length - 3}`;
+}
+
+/**
+ * Extract group title/subject changes from system messages.
+ *
+ * Detects patterns like:
+ * - Turkish: '... grubun konusunu "Yeni Başlık" olarak değiştirdi'
+ * - Turkish: '... grubun adını "Yeni Ad" olarak değiştirdi'
+ * - English: '... changed the subject to "New Title"'
+ * - English: '... changed the group name to "New Name"'
+ *
+ * @param messages - The array of parsed messages
+ * @returns An array of GroupTitleChange objects sorted newest-first
+ */
+function extractGroupTitleChanges(messages: ParsedMessage[]): GroupTitleChange[] {
+  const changes: GroupTitleChange[] = [];
+
+  // Turkish patterns: 'X grubun konusunu "Y" olarak değiştirdi' or 'X grubun adını "Y" olarak değiştirdi'
+  const trPattern = /^(.+?)\s+(?:grubun konusunu|grubun adını|grup adını)\s+"(.+?)"\s+olarak değiştirdi$/;
+  // English patterns: 'X changed the subject to "Y"' or 'X changed the group name to "Y"'
+  const enPattern = /^(.+?)\s+changed (?:the subject|the group name|the group) to "(.+?)"$/;
+
+  for (const msg of messages) {
+    if (msg.type !== 'system') continue;
+
+    const content = msg.content.trim();
+    const trMatch = trPattern.exec(content);
+    if (trMatch) {
+      changes.push({
+        date: msg.timestamp,
+        changedBy: trMatch[1].trim(),
+        newTitle: trMatch[2],
+      });
+      continue;
+    }
+
+    const enMatch = enPattern.exec(content);
+    if (enMatch) {
+      changes.push({
+        date: msg.timestamp,
+        changedBy: enMatch[1].trim(),
+        newTitle: enMatch[2],
+      });
+    }
+  }
+
+  // Newest first
+  changes.sort((a, b) => b.date.getTime() - a.date.getTime());
+  return changes;
 }
 
 /**
@@ -342,6 +399,9 @@ export async function parseWhatsAppChat(
   // Derive chat name
   const chatName = deriveChatName(participants);
 
+  // Extract group title change history
+  const groupTitleHistory = extractGroupTitleChanges(messages);
+
   // --- Stage 5: Done ---
   const result: ParsedChat = {
     messages,
@@ -350,6 +410,7 @@ export async function parseWhatsAppChat(
     endDate,
     totalMessages: messages.length,
     chatName,
+    groupTitleHistory,
   };
 
   reportProgress(

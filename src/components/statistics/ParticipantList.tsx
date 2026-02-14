@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { Card } from '@/src/components/ui';
-import { Strings } from '@/src/constants/strings';
 import {
   BorderRadius,
   FontSize,
@@ -10,6 +10,7 @@ import {
   Spacing,
 } from '@/src/constants/theme';
 import type { ParticipantStats } from '@/src/types';
+import { TopWords } from './TopWords';
 
 interface ParticipantListProps {
   stats: ParticipantStats[];
@@ -18,8 +19,9 @@ interface ParticipantListProps {
 
 export function ParticipantList({ stats, onPress }: ParticipantListProps) {
   const { colors } = useTheme();
+  const s = useStrings();
 
-  const maxMessages = Math.max(...stats.map((s) => s.messageCount), 1);
+  const maxMessages = Math.max(...stats.map((p) => p.messageCount), 1);
 
   return (
     <Card>
@@ -35,22 +37,35 @@ export function ParticipantList({ stats, onPress }: ParticipantListProps) {
               !isLast && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth },
             ]}
           >
-            {/* Name and stats */}
+            {/* Name, stats and detail button */}
             <View style={styles.info}>
               <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
                 {participant.name}
               </Text>
-              <Text style={[styles.stats, { color: colors.textSecondary }]}>
-                {participant.messageCount.toLocaleString('tr-TR')}{' '}
-                {Strings.common.messages}
-                {'  \u00B7  '}
-                {participant.wordCount.toLocaleString('tr-TR')}{' '}
-                {Strings.common.words}
-              </Text>
+              <View style={styles.rightInfo}>
+                <Text style={[styles.stats, { color: colors.textSecondary }]}>
+                  {participant.messageCount.toLocaleString('tr-TR')}{' '}
+                  {s.common.messages}
+                </Text>
+                {onPress && (
+                  <Pressable
+                    onPress={() => onPress(participant.participantId)}
+                    style={({ pressed }) => [
+                      styles.detailButton,
+                      { backgroundColor: colors.primary },
+                      pressed && { opacity: 0.8 },
+                    ]}
+                  >
+                    <Text style={styles.detailButtonText}>
+                      {s.common.detail} ›
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
 
             {/* Proportional bar */}
-            <View style={styles.barContainer}>
+            <View style={[styles.barContainer, { backgroundColor: colors.border + '60' }]}>
               <View
                 style={[
                   styles.bar,
@@ -61,6 +76,13 @@ export function ParticipantList({ stats, onPress }: ParticipantListProps) {
                 ]}
               />
             </View>
+
+            {/* Top words */}
+            {participant.topWords.length > 0 && (
+              <View style={styles.topWordsContainer}>
+                <TopWords words={participant.topWords.slice(0, 5)} />
+              </View>
+            )}
           </View>
         );
 
@@ -97,9 +119,25 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.semibold,
     flex: 1,
   },
+  rightInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
   stats: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.regular,
+  },
+  detailButton: {
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+    marginLeft: Spacing.xs,
+  },
+  detailButtonText: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold,
+    color: '#FFFFFF',
   },
   barContainer: {
     height: 6,
@@ -110,7 +148,10 @@ const styles = StyleSheet.create({
   bar: {
     height: '100%',
     borderRadius: BorderRadius.full,
-    opacity: 0.6,
+    opacity: 0.7,
+  },
+  topWordsContainer: {
+    marginTop: Spacing.xs,
   },
   pressed: {
     opacity: 0.7,

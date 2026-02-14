@@ -62,15 +62,14 @@ function formatMessage(message: ParsedMessage): string {
  *
  * Ham sohbet loglarını göndermek yerine:
  * 1. Temel istatistiklerin özetini oluşturur
- * 2. Temsili örnek mesajlar seçer (en fazla 15):
- *    - 3 en uzun metin mesajı
- *    - 3 en kısa metin mesajı
- *    - 3 en çok emoji içeren mesaj
- *    - 3 gece mesajı (00:00-06:00)
- *    - 3 rastgele mesaj
+ * 2. Temsili örnek mesajlar seçer (en fazla 8):
+ *    - 2 en uzun metin mesajı
+ *    - 2 en kısa metin mesajı
+ *    - 2 en çok emoji içeren mesaj
+ *    - 2 rastgele mesaj
  * 3. Tekrarlananları kaldırıp formatlar
  *
- * Bu yaklaşım bağlamı ~2048 token altında tutar.
+ * Bu yaklaşım bağlamı ~1024 token altında tutar.
  */
 export function prepareParticipantContext(
   participant: ParticipantStats,
@@ -131,32 +130,28 @@ export function prepareParticipantContext(
     }
   };
 
-  // En uzun 3 mesaj
+  // En uzun 2 mesaj
   const byLength = [...participantMessages].sort(
     (a, b) => b.content.length - a.content.length
   );
-  addUnique(byLength.slice(0, 3));
+  addUnique(byLength.slice(0, 2));
 
-  // En kısa 3 mesaj (en az 1 karakter)
+  // En kısa 2 mesaj (en az 1 karakter)
   const byShortLength = [...participantMessages]
     .filter((m) => m.content.trim().length >= 1)
     .sort((a, b) => a.content.length - b.content.length);
-  addUnique(byShortLength.slice(0, 3));
+  addUnique(byShortLength.slice(0, 2));
 
-  // En çok emoji içeren 3 mesaj
+  // En çok emoji içeren 2 mesaj
   const byEmoji = [...participantMessages].sort(
     (a, b) => countEmojis(b.content) - countEmojis(a.content)
   );
   const emojiMessages = byEmoji.filter((m) => countEmojis(m.content) > 0);
-  addUnique(emojiMessages.slice(0, 3));
+  addUnique(emojiMessages.slice(0, 2));
 
-  // 3 gece mesajı (00:00-06:00)
-  const nightMessages = participantMessages.filter(isNightMessage);
-  addUnique(pickRandom(nightMessages, 3));
-
-  // 3 rastgele mesaj (henüz seçilmemişlerden)
+  // 2 rastgele mesaj (henüz seçilmemişlerden)
   const remaining = participantMessages.filter((m) => !selectedIds.has(m.id));
-  addUnique(pickRandom(remaining, 3));
+  addUnique(pickRandom(remaining, 2));
 
   // Kronolojik sırala ve formatla
   const sortedMessages = [...selectedMessages].sort(
@@ -164,7 +159,7 @@ export function prepareParticipantContext(
   );
 
   const sampleMessages = sortedMessages
-    .slice(0, 15)
+    .slice(0, 8)
     .map(formatMessage);
 
   return {

@@ -22,6 +22,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       NSAppTransportSecurity: {
         NSAllowsLocalNetworking: true,
       },
+      UIFileSharingEnabled: true,
+      LSSupportsOpeningDocumentsInPlace: true,
     },
   },
   android: {
@@ -44,5 +46,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     groqApiKey: process.env.GROQ_API_KEY || '',
+    geminiApiKey: process.env.GEMINI_API_KEY || '',
   },
 });

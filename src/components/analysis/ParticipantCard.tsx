@@ -1,10 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { Card, Badge, Subtitle, Body, Caption } from '@/src/components/ui';
-import { Strings } from '@/src/constants/strings';
 import {
-  BorderRadius,
   FontSize,
   FontWeight,
   Spacing,
@@ -18,25 +17,27 @@ interface ParticipantCardProps {
 
 export function ParticipantCard({ analysis, onPress }: ParticipantCardProps) {
   const { colors } = useTheme();
+  const s = useStrings();
 
   return (
     <Card onPress={onPress} style={styles.card}>
-      {/* Nickname header */}
-      <View
-        style={[styles.nicknameContainer, { backgroundColor: colors.nicknameBg }]}
-      >
-        <Subtitle color={colors.nicknameText} style={styles.nickname}>
-          {analysis.nickname}
-        </Subtitle>
-      </View>
+      {/* Name as card header */}
+      <Subtitle style={styles.name}>{analysis.name}</Subtitle>
 
-      {/* Name */}
-      <Caption style={styles.name}>{analysis.name}</Caption>
+      {/* Nickname */}
+      <View style={styles.section}>
+        <Caption style={styles.sectionLabel}>
+          {s.analysis.nickname}
+        </Caption>
+        <Body style={{ ...styles.nicknameText, color: colors.nicknameText }}>
+          {analysis.nickname}
+        </Body>
+      </View>
 
       {/* Personality */}
       <View style={styles.section}>
         <Caption style={styles.sectionLabel}>
-          {Strings.analysis.personality}
+          {s.analysis.personality}
         </Caption>
         <Body>{analysis.personality}</Body>
       </View>
@@ -45,7 +46,7 @@ export function ParticipantCard({ analysis, onPress }: ParticipantCardProps) {
       {analysis.behaviorPatterns.length > 0 && (
         <View style={styles.section}>
           <Caption style={styles.sectionLabel}>
-            {Strings.statistics.behaviorPatterns}
+            {s.statistics.behaviorPatterns}
           </Caption>
           <View style={styles.badgeContainer}>
             {analysis.behaviorPatterns.map((pattern) => (
@@ -67,20 +68,13 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: Spacing.md,
   },
-  nicknameContainer: {
-    alignSelf: 'flex-start',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.full,
-    marginBottom: Spacing.sm,
-  },
-  nickname: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
-  },
   name: {
-    marginBottom: Spacing.md,
-    fontSize: FontSize.md,
+    marginBottom: Spacing.sm,
+    fontSize: FontSize.lg,
+  },
+  nicknameText: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold,
   },
   section: {
     marginTop: Spacing.sm,

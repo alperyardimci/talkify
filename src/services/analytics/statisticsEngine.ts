@@ -10,6 +10,8 @@ import type {
   HourlyActivity,
   DailyActivity,
   EmojiUsage,
+  DuoResponseTimeStats,
+  WordFrequency,
 } from '@/src/types';
 
 // Regex for emoji detection (presentation emojis + text emojis with variant selector)
@@ -54,6 +56,62 @@ function initDailyArray(): DailyActivity[] {
   return Array.from({ length: 7 }, (_, i) => ({ day: i, count: 0 }));
 }
 
+// ---- Stop words and word extraction ----
+
+const STOP_WORDS = new Set([
+  // Turkish - zamirler, edatlar, zarflar, yaygın kısa kelimeler
+  've', 'bir', 'bu', 'da', 'de', 'ile', 'için', 'gibi', 'ben', 'sen',
+  'var', 'yok', 'ne', 'mi', 'mı', 'mu', 'mü', 'şey', 'bi', 'şu', 'şimdi',
+  'ya', 'ki', 'daha', 'çok', 'az', 'en', 'hem', 'her', 'hiç', 'benim',
+  'senin', 'onun', 'biz', 'siz', 'bana', 'sana', 'ona', 'bizi', 'sizi',
+  'onu', 'bunu', 'şunu', 'neden', 'nasıl', 'nere', 'nerede', 'nereye',
+  'hangi', 'kadar', 'sonra', 'önce', 'olarak', 'olan', 'oldu', 'olur',
+  'olmuş', 'ise', 'değil', 'bile', 'sadece', 'belki', 'zaten', 'hep',
+  'bazen', 'artık', 'falan', 'filan', 'yani', 'mesela', 'aslında',
+  'evet', 'hayır', 'tamam', 'peki', 'hadi', 'lan', 'abi', 'ya',
+  'öyle', 'böyle', 'şöyle', 'tüm', 'bütün', 'kendi', 'aynı', 'başka',
+  'diğer', 'bazı', 'birçok', 'tek', 'olsun',
+  // Turkish - bağlaçlar (conjunctions)
+  'ama', 'fakat', 'ancak', 'lakin', 'oysa', 'oysaki', 'halbuki',
+  'veya', 'yahut', 'veyahut', 'yada', 'yoksa',
+  'çünkü', 'zira', 'madem', 'mademki',
+  'eğer', 'şayet', 'hatta', 'üstelik', 'ayrıca', 'dahası',
+  'yine', 'gene', 'rağmen', 'karşın', 'dolayı', 'nedeniyle',
+  'meğer', 'meğerse', 'gerçi', 'nitekim', 'öyleyse', 'dolayısıyla',
+  // English common
+  'the', 'and', 'is', 'in', 'to', 'it', 'of', 'that', 'this', 'was',
+  'for', 'are', 'with', 'but', 'not', 'you', 'all', 'can', 'had',
+  'her', 'one', 'our', 'out', 'has', 'have', 'been', 'will', 'would',
+  'just', 'like', 'what', 'when', 'who', 'how', 'from', 'they', 'she',
+  'him', 'his', 'its', 'than', 'then', 'them', 'some', 'into', 'only',
+  'very', 'also', 'your', 'about', 'which', 'their', 'there', 'could',
+  'other', 'more', 'these', 'those',
+  // English - conjunctions
+  'because', 'since', 'although', 'though', 'while', 'whereas',
+  'however', 'therefore', 'moreover', 'furthermore', 'nevertheless',
+  'either', 'neither', 'unless', 'until', 'whether', 'both',
+  // WhatsApp system/media placeholder words (TR + EN)
+  'medya', 'görüntü', 'dahil', 'edilmedi', 'dosya', 'çıkartma',
+  'belge', 'kişi', 'kartı', 'omitted', 'image', 'video', 'audio',
+  'sticker', 'gif', 'document', 'contact', 'card', 'media',
+  'silindi', 'sildiniz', 'mesaj', 'deleted', 'message',
+]);
+
+function extractWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => !w.startsWith('@'))             // skip @mentions
+    .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ''))  // strip punctuation
+    .filter((w) => {
+      if (w.length < 2) return false;
+      if (STOP_WORDS.has(w)) return false;
+      if (/^\d+$/.test(w)) return false;            // skip pure numbers (dates, phone fragments)
+      if (/\d/.test(w) && w.length > 4) return false; // skip long mixed tokens like "1122021"
+      return true;
+    });
+}
+
 // ---- Per-participant accumulator ----
 
 interface ParticipantAccumulator {
@@ -74,6 +132,7 @@ interface ParticipantAccumulator {
   nightMessageCount: number;
   firstMessageDate: Date | null;
   lastMessageDate: Date | null;
+  wordMap: Map<string, number>;
 }
 
 function createAccumulator(id: string, name: string): ParticipantAccumulator {
@@ -95,6 +154,7 @@ function createAccumulator(id: string, name: string): ParticipantAccumulator {
     nightMessageCount: 0,
     firstMessageDate: null,
     lastMessageDate: null,
+    wordMap: new Map(),
   };
 }
 
@@ -216,6 +276,12 @@ export function calculateStatistics(chat: ParsedChat): ChatStatistics {
       if (words === 1) {
         acc.singleWordCount++;
       }
+
+      // Word frequency tracking
+      const wordTokens = extractWords(msg.content);
+      for (const w of wordTokens) {
+        acc.wordMap.set(w, (acc.wordMap.get(w) ?? 0) + 1);
+      }
     }
 
     // ---- Consecutive messages ----
@@ -272,6 +338,14 @@ export function calculateStatistics(chat: ParsedChat): ChatStatistics {
     }
   }
 
+  // ---- Build participant name tokens to exclude from top words ----
+  const participantNameTokens = new Set<string>();
+  for (const p of participants) {
+    for (const token of p.name.toLowerCase().split(/\s+/)) {
+      if (token.length >= 2) participantNameTokens.add(token);
+    }
+  }
+
   // ---- Build participant stats ----
   const participantStats: ParticipantStats[] = [];
 
@@ -310,6 +384,13 @@ export function calculateStatistics(chat: ParsedChat): ChatStatistics {
     const nightMessageRatio =
       acc.messageCount > 0 ? acc.nightMessageCount / acc.messageCount : 0;
 
+    // Top words (top 10 by frequency, excluding participant names)
+    const topWords: WordFrequency[] = Array.from(acc.wordMap.entries())
+      .filter(([word]) => !participantNameTokens.has(word))
+      .map(([word, count]) => ({ word, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
     const stats: ParticipantStats = {
       participantId: acc.participantId,
       name: acc.name,
@@ -336,6 +417,7 @@ export function calculateStatistics(chat: ParsedChat): ChatStatistics {
       consecutiveMessages: maxConsecutive.get(acc.name) ?? 0,
       nightMessageRatio: Math.round(nightMessageRatio * 10000) / 10000,
       conversationStartCount: conversationStarts.get(acc.name) ?? 0,
+      topWords,
     };
 
     participantStats.push(stats);
@@ -408,5 +490,97 @@ export function calculateStatistics(chat: ParsedChat): ChatStatistics {
     mostActiveDay: { date: mostActiveDayKey, count: mostActiveDayCount },
     mostActiveHour: { hour: mostActiveHourVal, count: mostActiveHourCount },
     topEmojis,
+  };
+}
+
+// ---- Duo Response Time Calculation ----
+
+/**
+ * Calculates response times between two participants in a duo chat.
+ * Excludes messages sent between 01:00-09:00 local time (sleep hours).
+ *
+ * @param chat - The parsed chat data
+ * @param timezoneOffset - UTC offset in hours (e.g. 3 for UTC+3)
+ * @returns DuoResponseTimeStats or null if not a duo chat
+ */
+export function calculateDuoResponseTimes(
+  chat: ParsedChat,
+  timezoneOffset: number
+): DuoResponseTimeStats | null {
+  // Only works for exactly 2 participants
+  const participants = chat.participants.filter((p) => p.messageCount > 0);
+  if (participants.length !== 2) return null;
+
+  const name1 = participants[0].name;
+  const name2 = participants[1].name;
+
+  const waitTimes1: number[] = []; // times name1 waited to respond to name2
+  const waitTimes2: number[] = []; // times name2 waited to respond to name1
+
+  let prevSender: string | null = null;
+  let prevTimestamp: Date | null = null;
+
+  for (const msg of chat.messages) {
+    if (msg.type === 'system' || !msg.sender) continue;
+    if (msg.sender !== name1 && msg.sender !== name2) continue;
+
+    // Check if this message is in the excluded time range (01:00-09:00 local)
+    const utcHour = msg.timestamp.getUTCHours();
+    const localHour = (utcHour + timezoneOffset + 24) % 24;
+    if (localHour >= 1 && localHour < 9) {
+      // Still update prev for continuity but don't count this response
+      prevSender = msg.sender;
+      prevTimestamp = msg.timestamp;
+      continue;
+    }
+
+    if (prevSender !== null && prevTimestamp !== null && msg.sender !== prevSender) {
+      // Also check if previous message was in excluded range
+      const prevUtcHour = prevTimestamp.getUTCHours();
+      const prevLocalHour = (prevUtcHour + timezoneOffset + 24) % 24;
+      if (prevLocalHour >= 1 && prevLocalHour < 9) {
+        prevSender = msg.sender;
+        prevTimestamp = msg.timestamp;
+        continue;
+      }
+
+      const diffMs = msg.timestamp.getTime() - prevTimestamp.getTime();
+      const diffMin = diffMs / (1000 * 60);
+
+      // Only count reasonable response times (positive and within 24 hours)
+      if (diffMin > 0 && diffMin <= 1440) {
+        if (msg.sender === name1) {
+          waitTimes1.push(diffMin);
+        } else {
+          waitTimes2.push(diffMin);
+        }
+      }
+    }
+
+    prevSender = msg.sender;
+    prevTimestamp = msg.timestamp;
+  }
+
+  if (waitTimes1.length === 0 && waitTimes2.length === 0) return null;
+
+  const avg1 = waitTimes1.length > 0
+    ? Math.round(waitTimes1.reduce((s, v) => s + v, 0) / waitTimes1.length)
+    : 0;
+  const avg2 = waitTimes2.length > 0
+    ? Math.round(waitTimes2.reduce((s, v) => s + v, 0) / waitTimes2.length)
+    : 0;
+
+  return {
+    participant1: {
+      name: name1,
+      avgWaitMinutes: avg1,
+      totalResponses: waitTimes1.length,
+    },
+    participant2: {
+      name: name2,
+      avgWaitMinutes: avg2,
+      totalResponses: waitTimes2.length,
+    },
+    longerWaiterName: avg1 >= avg2 ? name1 : name2,
   };
 }

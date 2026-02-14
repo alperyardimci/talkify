@@ -24,7 +24,7 @@ export const TURKISH_12H = /^(\d{1,2})\.(\d{1,2})\.(\d{4})\s(ÖÖ|ÖS|öö|ös)\
  * Example: "[01.12.2023, 10:30:45] Sender: Message"
  * Also matches without comma: "[26.07.2025 23:04:26] Sender: Message"
  */
-export const IOS_TURKISH = /^\[(\d{2})\.(\d{2})\.(\d{4})[,\s]\s?(\d{2}):(\d{2}):(\d{2})\]\s/;
+export const IOS_TURKISH = /^\[(\d{1,2})\.(\d{1,2})\.(\d{4})[,\s]\s?(\d{1,2}):(\d{2}):(\d{2})\]\s/;
 
 /**
  * English format (common US/international):

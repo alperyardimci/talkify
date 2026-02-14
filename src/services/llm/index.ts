@@ -8,7 +8,7 @@ export {
   getSystemPrompt,
   getParticipantAnalysisPrompt,
   getGroupAnalysisPrompt,
-  getReviewPrompt,
+  getCombinedAnalysisPrompt,
 } from './promptTemplates';
-export { parseParticipantResponse, parseGroupResponse } from './responseParser';
+export { parseParticipantResponse, parseGroupResponse, parseCombinedResponse } from './responseParser';
 export { prepareParticipantContext } from './chunkStrategy';

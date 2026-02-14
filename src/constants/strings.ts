@@ -1,8 +1,10 @@
 // ============================================
-// Talkify - Turkish UI Strings
+// Talkify - Bilingual UI Strings (TR + EN)
 // ============================================
 
-export const Strings = {
+import type { Language } from '@/src/types';
+
+const trStrings = {
   app: {
     name: 'Talkify',
     tagline: 'WhatsApp sohbetlerini analiz et!',
@@ -12,14 +14,14 @@ export const Strings = {
     home: 'Ana Sayfa',
     analysis: 'Analiz',
     statistics: 'İstatistik',
-    settings: 'Gizlilik',
+    settings: 'Ayarlar',
   },
 
   home: {
     title: 'Sohbet Yükle',
     subtitle: 'WhatsApp sohbet dosyanı yükle ve analiz et',
     uploadButton: 'Dosya Seç',
-    uploadHint: 'WhatsApp > Sohbet > Dışa Aktar > Medyasız',
+    uploadHint: 'WhatsApp > Sohbet > Dışa Aktar (.zip veya .txt)',
     recentChats: 'Son Yüklenen',
     noChats: 'Henüz bir sohbet yüklenmedi',
     parsing: 'Sohbet okunuyor...',
@@ -27,6 +29,10 @@ export const Strings = {
     classifying: 'Mesajlar sınıflandırılıyor...',
     done: 'Tamamlandı!',
     error: 'Bir hata oluştu',
+    groupTitleHistory: 'Grup Başlığı Geçmişi',
+    titleChanges: 'değişiklik',
+    changedBy: 'değiştiren',
+    noTitleChanges: 'Başlık değişikliği yok',
   },
 
   analysis: {
@@ -44,6 +50,10 @@ export const Strings = {
     participantAnalysis: 'Katılımcı Analizi',
     funFacts: 'Eğlenceli Bilgiler',
     retry: 'Tekrar Dene',
+    selectMode: 'Analiz Modu Seçin',
+    relationshipDynamics: 'İlişki Dinamikleri',
+    copied: 'Kopyalandı',
+    copiedMessage: 'Analiz sonuçları panoya kopyalandı.',
   },
 
   statistics: {
@@ -65,23 +75,59 @@ export const Strings = {
     behaviorPatterns: 'Davranış Desenleri',
     avgResponseTime: 'Ort. Yanıt Süresi',
     minutes: 'dakika',
+    hours: 'saat',
+    duoResponseTime: 'Yanıt Süreleri',
+    duoAvgWait: 'Ort. Bekleme',
+    duoTotalResponses: 'Toplam Yanıt',
+    duoLongerWaiter: 'Daha çok bekleyen',
+    duoNightExcluded: '01:00-09:00 arası hariç tutuldu',
+    topWords: 'En Çok Kullanılan Kelimeler',
   },
 
   settings: {
-    title: 'Gizlilik',
-    llmSection: 'Groq AI Ayarları',
-    groqApiKey: 'Groq API Anahtarı',
-    groqApiKeyPlaceholder: 'gsk_...',
-    groqModel: 'Model',
+    title: 'Ayarlar',
+    llmSection: 'Gizlilik',
+    apiKey: 'API Anahtarı',
+    apiKeyPlaceholder: 'API anahtarınızı yapıştırın',
+    provider: 'Sağlayıcı',
+    model: 'Model',
     envHint: '.env dosyasından API anahtarı kullanılıyor',
     testConnection: 'Bağlantıyı Test Et',
     connected: 'Bağlı',
     disconnected: 'Bağlantı yok',
     connecting: 'Bağlanıyor...',
+    getApiKey: 'Ücretsiz API anahtarı al',
     about: 'Hakkında',
     version: 'Versiyon',
     privacy: 'Gizlilik',
-    privacyNote: 'Sohbet verileri analiz için Groq sunucularına gönderilir. Veriler Groq tarafında saklanmaz.',
+    privacyNote: 'Sohbet verileriniz cihazınızda işlenir, hiçbir sunucuya gönderilmez. Verileriniz saklanmaz ve üçüncü taraf uygulamalarla paylaşılmaz.',
+    languageSection: 'Dil',
+    timezoneSection: 'Saat Dilimi',
+    selectTimezone: 'Ülke seçerek saat dilimini ayarlayın',
+  },
+
+  modes: {
+    falci_teyze: 'Falcı Teyze',
+    psikolog: 'Psikolog',
+    mahalle_abisi: 'Mahalle Abisi',
+    futbol_aski: 'Futbol Aşkı',
+    gamer: 'Gamer',
+  },
+
+  modeDescriptions: {
+    falci_teyze: 'Kahve falı bakar gibi sohbeti analiz eder',
+    psikolog: 'Profesyonel klinik ton ile yapısal analiz',
+    mahalle_abisi: 'Samimi, argo dolu sokak yorumları',
+    futbol_aski: 'Futbol analojileri ile maç tarzı yorumlar',
+    gamer: 'Level, XP ve başarım metaforları ile analiz',
+  },
+
+  modeIcons: {
+    falci_teyze: '🔮',
+    psikolog: '🧠',
+    mahalle_abisi: '😎',
+    futbol_aski: '⚽',
+    gamer: '🎮',
   },
 
   patterns: {
@@ -129,8 +175,8 @@ export const Strings = {
     medya_delisi: '📸',
   },
 
-  days: ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'],
-  daysShort: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'],
+  days: ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'] as string[],
+  daysShort: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'] as string[],
 
   common: {
     loading: 'Yükleniyor...',
@@ -143,5 +189,205 @@ export const Strings = {
     confirm: 'Onayla',
     messages: 'mesaj',
     words: 'kelime',
+    detail: 'Detay',
   },
-} as const;
+};
+
+const enStrings: typeof trStrings = {
+  app: {
+    name: 'Talkify',
+    tagline: 'Analyze your WhatsApp chats!',
+  },
+
+  tabs: {
+    home: 'Home',
+    analysis: 'Analysis',
+    statistics: 'Statistics',
+    settings: 'Settings',
+  },
+
+  home: {
+    title: 'Load Chat',
+    subtitle: 'Upload your WhatsApp chat file and analyze it',
+    uploadButton: 'Select File',
+    uploadHint: 'WhatsApp > Chat > Export (.zip or .txt)',
+    recentChats: 'Recently Loaded',
+    noChats: 'No chat loaded yet',
+    parsing: 'Reading chat...',
+    detecting: 'Detecting format...',
+    classifying: 'Classifying messages...',
+    done: 'Done!',
+    error: 'An error occurred',
+    groupTitleHistory: 'Group Title History',
+    titleChanges: 'changes',
+    changedBy: 'changed by',
+    noTitleChanges: 'No title changes',
+  },
+
+  analysis: {
+    title: 'Analysis Results',
+    subtitle: 'AI-powered chat analysis',
+    startAnalysis: 'Start Analysis',
+    analyzing: 'Analyzing...',
+    noData: 'Please load a chat file first',
+    noConnection: 'Could not connect to LLM',
+    nickname: 'Nickname',
+    personality: 'Personality',
+    gossip: 'Gossip',
+    warning: 'Warning',
+    groupDynamics: 'Group Dynamics',
+    participantAnalysis: 'Participant Analysis',
+    funFacts: 'Fun Facts',
+    retry: 'Retry',
+    selectMode: 'Select Analysis Mode',
+    relationshipDynamics: 'Relationship Dynamics',
+    copied: 'Copied',
+    copiedMessage: 'Analysis results copied to clipboard.',
+  },
+
+  statistics: {
+    title: 'Statistics',
+    subtitle: 'Chat statistics',
+    noData: 'Please load a chat file first',
+    totalMessages: 'Total Messages',
+    totalWords: 'Total Words',
+    totalEmojis: 'Total Emojis',
+    totalMedia: 'Media Files',
+    totalLinks: 'Shared Links',
+    dateRange: 'Date Range',
+    mostActive: 'Most Active',
+    hourlyActivity: 'Hourly Activity',
+    dailyActivity: 'Daily Activity',
+    topEmojis: 'Top Emojis',
+    participants: 'Participants',
+    messageDistribution: 'Message Distribution',
+    behaviorPatterns: 'Behavior Patterns',
+    avgResponseTime: 'Avg. Response Time',
+    minutes: 'minutes',
+    hours: 'hours',
+    duoResponseTime: 'Response Times',
+    duoAvgWait: 'Avg. Wait',
+    duoTotalResponses: 'Total Responses',
+    duoLongerWaiter: 'Longer waiter',
+    duoNightExcluded: 'Excludes 01:00-09:00 hours',
+    topWords: 'Top Words',
+  },
+
+  settings: {
+    title: 'Settings',
+    llmSection: 'Privacy',
+    apiKey: 'API Key',
+    apiKeyPlaceholder: 'Paste your API key',
+    provider: 'Provider',
+    model: 'Model',
+    envHint: 'Using API key from .env file',
+    testConnection: 'Test Connection',
+    connected: 'Connected',
+    disconnected: 'Not connected',
+    connecting: 'Connecting...',
+    getApiKey: 'Get free API key',
+    about: 'About',
+    version: 'Version',
+    privacy: 'Privacy',
+    privacyNote: 'Your chat data is processed on your device and never sent to any server. Your data is not stored or shared with third-party applications.',
+    languageSection: 'Language',
+    timezoneSection: 'Timezone',
+    selectTimezone: 'Set timezone by selecting a country',
+  },
+
+  modes: {
+    falci_teyze: 'Fortune Teller',
+    psikolog: 'Psychologist',
+    mahalle_abisi: 'Street Buddy',
+    futbol_aski: 'Football Fan',
+    gamer: 'Gamer',
+  },
+
+  modeDescriptions: {
+    falci_teyze: 'Analyzes chat like reading a fortune',
+    psikolog: 'Professional clinical tone with structural analysis',
+    mahalle_abisi: 'Casual, slang-filled street commentary',
+    futbol_aski: 'Football analogies and match-style commentary',
+    gamer: 'Analysis with level, XP and achievement metaphors',
+  },
+
+  modeIcons: {
+    falci_teyze: '🔮',
+    psikolog: '🧠',
+    mahalle_abisi: '😎',
+    futbol_aski: '⚽',
+    gamer: '🎮',
+  },
+
+  patterns: {
+    gece_kusu: 'Night Owl',
+    monolog_krali: 'Monologue King',
+    hayalet: 'Ghost',
+    emoji_ustasi: 'Emoji Master',
+    sohbet_atesleyici: 'Conversation Starter',
+    tek_kelimelik: 'One-Word Replier',
+    link_bombardimanci: 'Link Bomber',
+    soru_makinesi: 'Question Machine',
+    roman_yazari: 'Novel Writer',
+    sessiz_okuyucu: 'Silent Reader',
+    sabahci: 'Early Bird',
+    medya_delisi: 'Media Fanatic',
+  },
+
+  patternDescriptions: {
+    gece_kusu: 'Highly active after midnight',
+    monolog_krali: 'Tends to send many consecutive messages',
+    hayalet: 'Response time well above average',
+    emoji_ustasi: 'Uses a wide variety of emojis',
+    sohbet_atesleyici: 'The person who starts conversations',
+    tek_kelimelik: 'Usually gives short, one-word replies',
+    link_bombardimanci: 'Constantly shares links',
+    soru_makinesi: 'Asks lots of questions',
+    roman_yazari: 'Writes long, detailed messages',
+    sessiz_okuyucu: 'The least active member of the group',
+    sabahci: 'Very active in the morning hours',
+    medya_delisi: 'Shares lots of photos and videos',
+  },
+
+  patternIcons: {
+    gece_kusu: '🦉',
+    monolog_krali: '👑',
+    hayalet: '👻',
+    emoji_ustasi: '🎨',
+    sohbet_atesleyici: '🔥',
+    tek_kelimelik: '💬',
+    link_bombardimanci: '🔗',
+    soru_makinesi: '❓',
+    roman_yazari: '📖',
+    sessiz_okuyucu: '🤫',
+    sabahci: '🌅',
+    medya_delisi: '📸',
+  },
+
+  days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as string[],
+  daysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as string[],
+
+  common: {
+    loading: 'Loading...',
+    error: 'Error',
+    retry: 'Retry',
+    cancel: 'Cancel',
+    save: 'Save',
+    delete: 'Delete',
+    close: 'Close',
+    confirm: 'Confirm',
+    messages: 'messages',
+    words: 'words',
+    detail: 'Detail',
+  },
+};
+
+export type StringsType = typeof trStrings;
+
+export const allStrings: Record<Language, StringsType> = {
+  tr: trStrings,
+  en: enStrings,
+};
+
+// Backward compatibility
+export const Strings = trStrings;

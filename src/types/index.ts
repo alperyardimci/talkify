@@ -2,6 +2,12 @@
 // Talkify - TypeScript Type Definitions
 // ============================================
 
+// --- App-wide Types ---
+
+export type Language = 'tr' | 'en';
+
+export type AnalysisMode = 'falci_teyze' | 'psikolog' | 'mahalle_abisi' | 'futbol_aski' | 'gamer';
+
 // --- WhatsApp Parser Types ---
 
 export type MessageType = 'text' | 'media' | 'system' | 'deleted' | 'link';
@@ -23,6 +29,12 @@ export interface ChatParticipant {
   lastMessage: Date;
 }
 
+export interface GroupTitleChange {
+  date: Date;
+  newTitle: string;
+  changedBy: string;
+}
+
 export interface ParsedChat {
   messages: ParsedMessage[];
   participants: ChatParticipant[];
@@ -30,6 +42,7 @@ export interface ParsedChat {
   endDate: Date;
   totalMessages: number;
   chatName: string;
+  groupTitleHistory: GroupTitleChange[];
 }
 
 export type DateFormatType = 'turkish_24h' | 'turkish_12h' | 'ios_turkish' | 'english';
@@ -43,6 +56,11 @@ export interface ParseProgress {
 }
 
 // --- Statistics Types ---
+
+export interface WordFrequency {
+  word: string;
+  count: number;
+}
 
 export interface HourlyActivity {
   hour: number;
@@ -82,6 +100,7 @@ export interface ParticipantStats {
   consecutiveMessages: number; // max streak
   nightMessageRatio: number; // 00:00-06:00
   conversationStartCount: number;
+  topWords: WordFrequency[];
 }
 
 export interface ChatStatistics {
@@ -126,12 +145,14 @@ export interface BehaviorPattern {
 
 // --- LLM Types ---
 
-export type LLMProviderType = 'groq';
+export type LLMProviderType = 'groq' | 'gemini';
 
 export interface LLMConfig {
   provider: LLMProviderType;
   groqApiKey: string;
   groqModel: string;
+  geminiApiKey: string;
+  geminiModel: string;
   temperature: number;
   maxTokens: number;
 }
@@ -168,6 +189,22 @@ export interface AnalysisResult {
   isComplete: boolean;
 }
 
+// --- Duo Response Time Types ---
+
+export interface DuoResponseTimeStats {
+  participant1: {
+    name: string;
+    avgWaitMinutes: number;
+    totalResponses: number;
+  };
+  participant2: {
+    name: string;
+    avgWaitMinutes: number;
+    totalResponses: number;
+  };
+  longerWaiterName: string;
+}
+
 // --- Store Types ---
 
 export interface ChatState {
@@ -183,12 +220,15 @@ export interface AnalysisState {
   analysisResult: AnalysisResult | null;
   isAnalyzing: boolean;
   analysisProgress: number;
+  analysisStatus: string | null;
+  selectedMode: AnalysisMode;
   error: string | null;
 }
 
 export interface SettingsState {
   llmConfig: LLMConfig;
-  language: 'tr';
+  language: Language;
+  timezoneOffset: number;
 }
 
 export interface LLMState {

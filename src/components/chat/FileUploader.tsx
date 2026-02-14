@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useTheme } from '@/src/hooks/useTheme';
-import { Strings } from '@/src/constants/strings';
+import { useStrings } from '@/src/hooks/useStrings';
 import {
   BorderRadius,
   FontSize,
@@ -27,6 +27,7 @@ export function FileUploader({
   isLoading = false,
 }: FileUploaderProps) {
   const { colors } = useTheme();
+  const s = useStrings();
 
   return (
     <Pressable
@@ -49,12 +50,12 @@ export function FileUploader({
         <>
           <Text style={styles.icon}>{fileName ? '\u2705' : '\uD83D\uDCC1'}</Text>
           <Text style={[styles.title, { color: colors.text }]}>
-            {fileName ?? Strings.home.uploadButton}
+            {fileName ?? s.home.uploadButton}
           </Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             {fileName
-              ? Strings.home.title
-              : Strings.home.uploadHint}
+              ? s.home.title
+              : s.home.uploadHint}
           </Text>
         </>
       )}

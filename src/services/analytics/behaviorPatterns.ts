@@ -6,8 +6,9 @@ import type {
   ParticipantStats,
   BehaviorPattern,
   BehaviorPatternType,
+  Language,
 } from '@/src/types';
-import { Strings } from '@/src/constants/strings';
+import { allStrings } from '@/src/constants/strings';
 
 // ---- Pattern detector definition ----
 
@@ -154,12 +155,13 @@ const patternDetectors: PatternDetector[] = [
 
 // ---- Build a BehaviorPattern from type and score ----
 
-function buildPattern(type: BehaviorPatternType, score: number): BehaviorPattern {
+function buildPattern(type: BehaviorPatternType, score: number, language: Language): BehaviorPattern {
+  const strings = allStrings[language];
   return {
     type,
-    label: Strings.patterns[type],
-    description: Strings.patternDescriptions[type],
-    icon: Strings.patternIcons[type],
+    label: strings.patterns[type],
+    description: strings.patternDescriptions[type],
+    icon: strings.patternIcons[type],
     score,
   };
 }
@@ -168,14 +170,15 @@ function buildPattern(type: BehaviorPatternType, score: number): BehaviorPattern
 
 export function detectBehaviorPatterns(
   stats: ParticipantStats,
-  allStats: ParticipantStats[]
+  allStats: ParticipantStats[],
+  language: Language = 'tr'
 ): BehaviorPattern[] {
   const patterns: BehaviorPattern[] = [];
 
   for (const detector of patternDetectors) {
     const score = detector.detect(stats, allStats);
     if (score !== null && score >= 30) {
-      patterns.push(buildPattern(detector.type, score));
+      patterns.push(buildPattern(detector.type, score, language));
     }
   }
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { Card, StatCard, Subtitle, Body, Caption } from '@/src/components/ui';
-import { Strings } from '@/src/constants/strings';
 import {
   BorderRadius,
   FontSize,
@@ -26,6 +26,7 @@ function formatDate(date: Date): string {
 
 export function ChatPreview({ chat }: ChatPreviewProps) {
   const { colors } = useTheme();
+  const s = useStrings();
 
   const dateRange = `${formatDate(chat.startDate)} - ${formatDate(chat.endDate)}`;
 
@@ -34,7 +35,7 @@ export function ChatPreview({ chat }: ChatPreviewProps) {
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <StatCard
-            label={Strings.statistics.totalMessages}
+            label={s.statistics.totalMessages}
             value={chat.totalMessages.toLocaleString('tr-TR')}
             icon={'\uD83D\uDCAC'}
             color={colors.primary}
@@ -42,7 +43,7 @@ export function ChatPreview({ chat }: ChatPreviewProps) {
         </View>
         <View style={styles.statItem}>
           <StatCard
-            label={Strings.statistics.participants}
+            label={s.statistics.participants}
             value={chat.participants.length}
             icon={'\uD83D\uDC65'}
             color={colors.secondary}
@@ -51,13 +52,13 @@ export function ChatPreview({ chat }: ChatPreviewProps) {
       </View>
 
       <Card style={styles.dateCard}>
-        <Caption>{Strings.statistics.dateRange}</Caption>
+        <Caption>{s.statistics.dateRange}</Caption>
         <Body style={styles.dateText}>{dateRange}</Body>
       </Card>
 
       <Card style={styles.participantsCard}>
         <Subtitle style={styles.sectionTitle}>
-          {Strings.statistics.participants}
+          {s.statistics.participants}
         </Subtitle>
         {chat.participants.map((participant) => (
           <View
@@ -77,7 +78,7 @@ export function ChatPreview({ chat }: ChatPreviewProps) {
               ]}
             >
               {participant.messageCount.toLocaleString('tr-TR')}{' '}
-              {Strings.common.messages}
+              {s.common.messages}
             </Text>
           </View>
         ))}

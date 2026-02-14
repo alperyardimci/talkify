@@ -2,7 +2,7 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { useTheme } from '@/src/hooks/useTheme';
-import { Strings } from '@/src/constants/strings';
+import { useStrings } from '@/src/hooks/useStrings';
 
 // Each tab has its own accent color
 const TAB_COLORS = {
@@ -35,6 +35,7 @@ function TabBarIcon({
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const s = useStrings();
 
   return (
     <Tabs
@@ -54,7 +55,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: Strings.tabs.home,
+          title: s.tabs.home,
           headerShown: false,
           tabBarActiveTintColor: TAB_COLORS.home,
           tabBarIcon: ({ color, focused }) => (
@@ -65,7 +66,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="analysis"
         options={{
-          title: Strings.tabs.analysis,
+          title: s.tabs.analysis,
           headerShown: false,
           tabBarActiveTintColor: TAB_COLORS.analysis,
           tabBarIcon: ({ color, focused }) => (
@@ -76,7 +77,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="statistics"
         options={{
-          title: Strings.tabs.statistics,
+          title: s.tabs.statistics,
           headerShown: false,
           tabBarActiveTintColor: TAB_COLORS.statistics,
           tabBarIcon: ({ color, focused }) => (
@@ -87,11 +88,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: Strings.tabs.settings,
+          title: s.tabs.settings,
           headerShown: false,
           tabBarActiveTintColor: TAB_COLORS.settings,
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name="shield" color={color} activeColor={TAB_COLORS.settings} focused={focused} />
+            <TabBarIcon name="cog" color={color} activeColor={TAB_COLORS.settings} focused={focused} />
           ),
         }}
       />

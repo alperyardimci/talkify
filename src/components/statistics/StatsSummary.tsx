@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { StatCard } from '@/src/components/ui';
-import { Strings } from '@/src/constants/strings';
 import { Spacing } from '@/src/constants/theme';
 import type { ChatStatistics } from '@/src/types';
 
@@ -12,34 +12,35 @@ interface StatsSummaryProps {
 
 export function StatsSummary({ statistics }: StatsSummaryProps) {
   const { colors } = useTheme();
+  const s = useStrings();
 
   const stats = [
     {
-      label: Strings.statistics.totalMessages,
+      label: s.statistics.totalMessages,
       value: statistics.totalMessages.toLocaleString('tr-TR'),
       icon: '\uD83D\uDCAC',
       color: colors.primary,
     },
     {
-      label: Strings.statistics.totalWords,
+      label: s.statistics.totalWords,
       value: statistics.totalWords.toLocaleString('tr-TR'),
       icon: '\uD83D\uDCDD',
       color: colors.secondary,
     },
     {
-      label: Strings.statistics.totalEmojis,
+      label: s.statistics.totalEmojis,
       value: statistics.totalEmojis.toLocaleString('tr-TR'),
       icon: '\uD83D\uDE0A',
       color: colors.accent,
     },
     {
-      label: Strings.statistics.totalMedia,
+      label: s.statistics.totalMedia,
       value: statistics.totalMedia.toLocaleString('tr-TR'),
       icon: '\uD83D\uDCF7',
       color: colors.warning,
     },
     {
-      label: Strings.statistics.totalLinks,
+      label: s.statistics.totalLinks,
       value: statistics.totalLinks.toLocaleString('tr-TR'),
       icon: '\uD83D\uDD17',
       color: colors.success,

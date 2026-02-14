@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { ProgressBar, Body, Caption } from '@/src/components/ui';
-import { Strings } from '@/src/constants/strings';
 import { Spacing } from '@/src/constants/theme';
 import type { ParseProgress as ParseProgressType } from '@/src/types';
 
@@ -10,17 +10,18 @@ interface ParseProgressProps {
   progress: ParseProgressType;
 }
 
-const stageLabels: Record<ParseProgressType['stage'], string> = {
-  reading: Strings.home.parsing,
-  detecting: Strings.home.detecting,
-  parsing: Strings.home.parsing,
-  classifying: Strings.home.classifying,
-  done: Strings.home.done,
-  error: Strings.home.error,
-};
-
 export function ParseProgress({ progress }: ParseProgressProps) {
   const { colors } = useTheme();
+  const s = useStrings();
+
+  const stageLabels: Record<ParseProgressType['stage'], string> = {
+    reading: s.home.parsing,
+    detecting: s.home.detecting,
+    parsing: s.home.parsing,
+    classifying: s.home.classifying,
+    done: s.home.done,
+    error: s.home.error,
+  };
 
   const stageLabel = stageLabels[progress.stage];
   const isError = progress.stage === 'error';
@@ -46,7 +47,7 @@ export function ParseProgress({ progress }: ParseProgressProps) {
       {progress.totalLines != null && progress.processedLines != null ? (
         <Caption style={styles.lineInfo}>
           {progress.processedLines.toLocaleString('tr-TR')} /{' '}
-          {progress.totalLines.toLocaleString('tr-TR')} satir
+          {progress.totalLines.toLocaleString('tr-TR')}
         </Caption>
       ) : null}
     </View>

@@ -1,13 +1,15 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AnalysisState, ChatStatistics, AnalysisResult } from '@/src/types';
+import type { AnalysisState, ChatStatistics, AnalysisResult, AnalysisMode } from '@/src/types';
 
 interface AnalysisActions {
   setStatistics: (statistics: ChatStatistics | null) => void;
   setAnalysisResult: (result: AnalysisResult | null) => void;
   setIsAnalyzing: (isAnalyzing: boolean) => void;
   setAnalysisProgress: (progress: number) => void;
+  setAnalysisStatus: (status: string | null) => void;
+  setSelectedMode: (mode: AnalysisMode) => void;
   setError: (error: string | null) => void;
   reset: () => void;
 }
@@ -17,6 +19,8 @@ const initialState: AnalysisState = {
   analysisResult: null,
   isAnalyzing: false,
   analysisProgress: 0,
+  analysisStatus: null,
+  selectedMode: 'falci_teyze',
   error: null,
 };
 
@@ -29,13 +33,18 @@ export const useAnalysisStore = create<AnalysisState & AnalysisActions>()(
       setAnalysisResult: (result) => set({ analysisResult: result, error: null }),
       setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),
       setAnalysisProgress: (progress) => set({ analysisProgress: progress }),
-      setError: (error) => set({ error, isAnalyzing: false }),
+      setAnalysisStatus: (status) => set({ analysisStatus: status }),
+      setSelectedMode: (mode) => set({ selectedMode: mode }),
+      setError: (error) => set(error ? { error, isAnalyzing: false } : { error }),
       reset: () => set(initialState),
     }),
     {
       name: 'talkify-analysis',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ analysisResult: state.analysisResult }),
+      partialize: (state) => ({
+        analysisResult: state.analysisResult,
+        selectedMode: state.selectedMode,
+      }),
     },
   ),
 );

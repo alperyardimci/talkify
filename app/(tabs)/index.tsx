@@ -1,29 +1,25 @@
 import React from 'react';
 import { View, ScrollView, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { useWhatsAppParser } from '@/src/hooks/useWhatsAppParser';
-import { useLLMAnalysis } from '@/src/hooks/useLLMAnalysis';
-import { useChatStore, useAnalysisStore } from '@/src/stores';
-import { Strings } from '@/src/constants/strings';
+import { useChatStore } from '@/src/stores';
 import { Spacing, FontSize, FontWeight } from '@/src/constants/theme';
-import { Title, Body, Button } from '@/src/components/ui';
-import { FileUploader, ParseProgress as ParseProgressComponent, ChatPreview } from '@/src/components/chat';
+import { Title, Body } from '@/src/components/ui';
+import { FileUploader, ParseProgress as ParseProgressComponent, ChatPreview, GroupTitleHistory } from '@/src/components/chat';
 
 const logo = require('@/assets/logo/logo.png');
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const router = useRouter();
+  const s = useStrings();
   const { pickAndParse } = useWhatsAppParser();
-  const { runAnalysis } = useLLMAnalysis();
-  const currentChat = useChatStore((s) => s.currentChat);
-  const isAnalyzing = useAnalysisStore((s) => s.isAnalyzing);
-  const parseProgress = useChatStore((s) => s.parseProgress);
-  const fileName = useChatStore((s) => s.fileName);
-  const isLoading = useChatStore((s) => s.isLoading);
-  const error = useChatStore((s) => s.error);
+  const currentChat = useChatStore((st) => st.currentChat);
+  const parseProgress = useChatStore((st) => st.parseProgress);
+  const fileName = useChatStore((st) => st.fileName);
+  const isLoading = useChatStore((st) => st.isLoading);
+  const error = useChatStore((st) => st.error);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -31,10 +27,10 @@ export default function HomeScreen() {
         <View style={styles.hero}>
           <View style={styles.titleRow}>
             <Image source={logo} style={styles.logo} />
-            <Title style={styles.appName}>{Strings.app.name}</Title>
+            <Title style={styles.appName}>{s.app.name}</Title>
           </View>
           <Body style={{ textAlign: 'center', color: colors.textSecondary }}>
-            {Strings.app.tagline}
+            {s.app.tagline}
           </Body>
         </View>
 
@@ -43,19 +39,6 @@ export default function HomeScreen() {
           fileName={fileName ?? undefined}
           isLoading={isLoading}
         />
-
-        {currentChat && (
-          <Button
-            title={Strings.analysis.startAnalysis}
-            onPress={() => {
-              runAnalysis();
-              router.push('/(tabs)/analysis');
-            }}
-            variant="primary"
-            loading={isAnalyzing}
-            style={styles.analyzeButton}
-          />
-        )}
 
         {parseProgress && parseProgress.stage !== 'done' && (
           <View style={styles.section}>
@@ -72,6 +55,12 @@ export default function HomeScreen() {
         {currentChat && (
           <View style={styles.section}>
             <ChatPreview chat={currentChat} />
+          </View>
+        )}
+
+        {currentChat && currentChat.groupTitleHistory.length > 0 && (
+          <View style={styles.section}>
+            <GroupTitleHistory history={currentChat.groupTitleHistory} />
           </View>
         )}
       </ScrollView>
@@ -113,8 +102,5 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     padding: Spacing.md,
     borderRadius: 12,
-  },
-  analyzeButton: {
-    marginTop: Spacing.md,
   },
 });

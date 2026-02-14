@@ -1,16 +1,17 @@
 import React, { useCallback } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator, Alert, Pressable, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useTheme } from '@/src/hooks/useTheme';
+import { useStrings } from '@/src/hooks/useStrings';
 import { useLLMAnalysis } from '@/src/hooks/useLLMAnalysis';
 import { useChatStore, useAnalysisStore } from '@/src/stores';
-import { Strings } from '@/src/constants/strings';
-import { Spacing, FontSize, FontWeight } from '@/src/constants/theme';
+import { Spacing } from '@/src/constants/theme';
 import { Title, Subtitle, Body, Button, Card, ProgressBar } from '@/src/components/ui';
-import { ParticipantCard, GossipBubble } from '@/src/components/analysis';
+import { ParticipantCard, GossipBubble, AnalysisModeSelector } from '@/src/components/analysis';
+import { SkeletonCard } from '@/src/components/analysis/SkeletonCard';
 import type { AnalysisResult } from '@/src/types';
 
 function formatAnalysisText(result: AnalysisResult, chatName: string): string {
@@ -43,27 +44,31 @@ function formatAnalysisText(result: AnalysisResult, chatName: string): string {
 
 export default function AnalysisScreen() {
   const { colors } = useTheme();
+  const s = useStrings();
   const router = useRouter();
   const { runAnalysis } = useLLMAnalysis();
-  const currentChat = useChatStore((s) => s.currentChat);
-  const analysisResult = useAnalysisStore((s) => s.analysisResult);
-  const isAnalyzing = useAnalysisStore((s) => s.isAnalyzing);
-  const analysisProgress = useAnalysisStore((s) => s.analysisProgress);
-  const analysisError = useAnalysisStore((s) => s.error);
+  const currentChat = useChatStore((st) => st.currentChat);
+  const analysisResult = useAnalysisStore((st) => st.analysisResult);
+  const isAnalyzing = useAnalysisStore((st) => st.isAnalyzing);
+  const analysisProgress = useAnalysisStore((st) => st.analysisProgress);
+  const analysisStatus = useAnalysisStore((st) => st.analysisStatus);
+  const analysisError = useAnalysisStore((st) => st.error);
+  const selectedMode = useAnalysisStore((st) => st.selectedMode);
+  const setSelectedMode = useAnalysisStore((st) => st.setSelectedMode);
 
   const handleCopy = useCallback(async () => {
     if (!analysisResult || !currentChat) return;
     const text = formatAnalysisText(analysisResult, currentChat.chatName);
     await Clipboard.setStringAsync(text);
-    Alert.alert('Kopyalandi', 'Analiz sonuclari panoya kopyalandi.');
-  }, [analysisResult, currentChat]);
+    Alert.alert(s.analysis.copied, s.analysis.copiedMessage);
+  }, [analysisResult, currentChat, s]);
 
   if (!currentChat) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <View style={styles.emptyState}>
-          <Title>{Strings.analysis.title}</Title>
-          <Body style={styles.emptyText}>{Strings.analysis.noData}</Body>
+          <Title>{s.analysis.title}</Title>
+          <Body style={styles.emptyText}>{s.analysis.noData}</Body>
         </View>
       </SafeAreaView>
     );
@@ -73,7 +78,7 @@ export default function AnalysisScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.titleRow}>
-          <Title style={{ flex: 1 }}>{Strings.analysis.title}</Title>
+          <Title style={{ flex: 1 }}>{s.analysis.title}</Title>
           {analysisResult && !isAnalyzing && (
             <Pressable onPress={handleCopy} style={styles.copyButton} hitSlop={8}>
               <FontAwesome name="copy" size={20} color={colors.primary} />
@@ -83,30 +88,50 @@ export default function AnalysisScreen() {
 
         {!analysisResult && !isAnalyzing && !analysisError && (
           <View style={styles.startSection}>
-            <Body style={{ textAlign: 'center', marginBottom: Spacing.sm }}>{Strings.analysis.subtitle}</Body>
+            <View style={styles.modeSection}>
+              <Subtitle>{s.analysis.selectMode}</Subtitle>
+              <AnalysisModeSelector
+                selectedMode={selectedMode}
+                onSelect={setSelectedMode}
+              />
+            </View>
+
             <Button
-              title={Strings.analysis.startAnalysis}
+              title={s.analysis.startAnalysis}
               onPress={runAnalysis}
               variant="primary"
+              disabled={isAnalyzing}
+              loading={isAnalyzing}
             />
           </View>
         )}
 
         {isAnalyzing && (
-          <Card style={styles.progressCard}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Body style={styles.analyzingText}>{Strings.analysis.analyzing}</Body>
-            <ProgressBar progress={analysisProgress} label="Ilerleme" showPercentage />
-          </Card>
+          <View style={styles.loadingSection}>
+            <Card style={styles.progressCard}>
+              <Body style={styles.analyzingText}>{s.analysis.analyzing}</Body>
+              <ProgressBar progress={analysisProgress} label="" showPercentage />
+              {analysisStatus && (
+                <Body style={{ ...styles.statusText, color: colors.primary }}>
+                  {analysisStatus}
+                </Body>
+              )}
+            </Card>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </View>
         )}
 
         {analysisError && !isAnalyzing && (
           <View style={[styles.errorBox, { backgroundColor: colors.error + '15' }]}>
             <Body style={{ color: colors.error }}>{analysisError}</Body>
             <Button
-              title={Strings.analysis.retry}
+              title={s.analysis.retry}
               onPress={runAnalysis}
               variant="outline"
+              disabled={isAnalyzing}
+              loading={isAnalyzing}
               style={{ marginTop: Spacing.sm }}
             />
           </View>
@@ -125,7 +150,7 @@ export default function AnalysisScreen() {
             ))}
 
             <View style={styles.section}>
-              <Subtitle>{Strings.analysis.gossip}</Subtitle>
+              <Subtitle>{s.analysis.gossip}</Subtitle>
               {analysisResult.participants.map((participant) => (
                 <GossipBubble
                   key={participant.participantId}
@@ -137,17 +162,17 @@ export default function AnalysisScreen() {
 
             {analysisResult.group && (
               <View style={styles.section}>
-                <Subtitle>{Strings.analysis.groupDynamics}</Subtitle>
+                <Subtitle>{s.analysis.groupDynamics}</Subtitle>
                 <Card style={styles.groupCard}>
                   <Body>{analysisResult.group.summary}</Body>
                   <View style={styles.dynamicsSection}>
-                    <Subtitle style={{ fontSize: 15 }}>İlişki Dinamikleri</Subtitle>
+                    <Subtitle style={{ fontSize: 15 }}>{s.analysis.relationshipDynamics}</Subtitle>
                     <Body>{analysisResult.group.dynamics}</Body>
                   </View>
                   {analysisResult.group.funFacts.length > 0 && (
                     <View style={styles.funFacts}>
                       <Subtitle style={{ fontSize: 15 }}>
-                        {Strings.analysis.funFacts}
+                        {s.analysis.funFacts}
                       </Subtitle>
                       {analysisResult.group.funFacts.map((fact, i) => (
                         <Body key={i}>{fact}</Body>
@@ -159,9 +184,11 @@ export default function AnalysisScreen() {
             )}
 
             <Button
-              title={Strings.analysis.retry}
+              title={s.analysis.retry}
               onPress={runAnalysis}
               variant="outline"
+              disabled={isAnalyzing}
+              loading={isAnalyzing}
               style={styles.reanalyzeButton}
             />
           </>
@@ -200,6 +227,15 @@ const styles = StyleSheet.create({
   startSection: {
     alignItems: 'center',
     marginVertical: Spacing.lg,
+    gap: Spacing.md,
+  },
+  modeSection: {
+    width: '100%',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  loadingSection: {
+    gap: Spacing.md,
   },
   progressCard: {
     alignItems: 'center',
@@ -208,6 +244,10 @@ const styles = StyleSheet.create({
   },
   analyzingText: {
     textAlign: 'center',
+  },
+  statusText: {
+    textAlign: 'center',
+    fontSize: 13,
   },
   errorBox: {
     marginTop: Spacing.md,
