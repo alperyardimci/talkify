@@ -381,6 +381,34 @@ export async function parseWhatsAppChat(
     'Katılımcılar belirleniyor...'
   );
 
+  // Extract group title change history FIRST to identify group names
+  const groupTitleHistory = extractGroupTitleChanges(messages);
+
+  // Collect all known group names from title history and creation messages
+  const groupNames = new Set<string>();
+  for (const change of groupTitleHistory) {
+    groupNames.add(change.newTitle);
+  }
+  // Also detect original group name from creation messages
+  for (const msg of messages) {
+    if (msg.type !== 'system') continue;
+    const content = msg.content.trim();
+    const trCreation = /"(.+?)"\s+grubunu oluşturdu/.exec(content);
+    if (trCreation) { groupNames.add(trCreation[1]); continue; }
+    const enCreation = /created group "(.+?)"/.exec(content);
+    if (enCreation) { groupNames.add(enCreation[1]); continue; }
+  }
+
+  // Reclassify messages where the sender matches a known group name
+  if (groupNames.size > 0) {
+    for (const msg of messages) {
+      if (msg.sender && groupNames.has(msg.sender)) {
+        msg.type = 'system';
+        msg.sender = '';
+      }
+    }
+  }
+
   const participants = buildParticipants(messages);
 
   reportProgress(
@@ -398,9 +426,6 @@ export async function parseWhatsAppChat(
 
   // Derive chat name
   const chatName = deriveChatName(participants);
-
-  // Extract group title change history
-  const groupTitleHistory = extractGroupTitleChanges(messages);
 
   // --- Stage 5: Done ---
   const result: ParsedChat = {

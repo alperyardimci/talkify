@@ -43,6 +43,13 @@ const SYSTEM_PATTERNS_TR: string[] = [
   'gruba eklendi',
   'gruptan ayrıldı',
   'konu değiştirildi',
+  'oluşturuldu',
+  'uçtan uca',
+  'sabitledi',
+  'sabitini kaldırdı',
+  'davet bağlantısıyla',
+  'mesaj gönderebilir',
+  'gruba katılmak için',
 ];
 
 const SYSTEM_PATTERNS_EN: string[] = [
@@ -60,6 +67,10 @@ const SYSTEM_PATTERNS_EN: string[] = [
   'is now an admin',
   'turned on disappearing messages',
   'turned off disappearing messages',
+  'pinned a message',
+  'unpinned a message',
+  'end-to-end encrypted',
+  'via invite link',
 ];
 
 // --- Media patterns ---

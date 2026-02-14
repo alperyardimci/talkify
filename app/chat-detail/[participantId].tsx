@@ -89,15 +89,13 @@ export default function ParticipantDetailScreen() {
               <View style={styles.compactStat}>
                 <Text style={[styles.compactStatValue, { color: colors.text }]}>
                   {participantStats.avgResponseTimeMinutes >= 60
-                    ? `${Math.round(participantStats.avgResponseTimeMinutes / 60)}`
+                    ? `${Math.round(participantStats.avgResponseTimeMinutes / 60)} ${s.statistics.hours}`
                     : participantStats.avgResponseTimeMinutes < 1
-                      ? '< 1'
-                      : `${Math.round(participantStats.avgResponseTimeMinutes)}`}
+                      ? `< 1 ${s.statistics.minutes}`
+                      : `${Math.round(participantStats.avgResponseTimeMinutes)} ${s.statistics.minutes}`}
                 </Text>
                 <Text style={[styles.compactStatLabel, { color: colors.textSecondary }]}>
-                  {participantStats.avgResponseTimeMinutes >= 60
-                    ? s.statistics.hours
-                    : s.statistics.minutes}
+                  {s.statistics.avgResponseTime}
                 </Text>
               </View>
             </>
